@@ -1,0 +1,468 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { 
+  Plus, Edit, Trash, FileText, Users, ShoppingBag, TrendingUp, 
+  LogOut, Settings, Download, Eye 
+} from "lucide-react";
+import toast from "react-hot-toast";
+import Link from "next/link";
+
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [stats, setStats] = useState({
+    totalResources: 0,
+    totalUsers: 0,
+    totalSales: 0,
+    revenue: 0,
+  });
+  const [resources, setResources] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("/api/admin/verify");
+      if (response.ok) {
+        setIsAuthenticated(true);
+        fetchDashboardData();
+      } else {
+        router.push("/admin/login");
+      }
+    } catch (error) {
+      router.push("/admin/login");
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      // Mock data for now since MongoDB is not connected
+      setStats({
+        totalResources: 12,
+        totalUsers: 45,
+        totalSales: 23,
+        revenue: 1250.00,
+      });
+
+      setResources([
+        {
+          id: "1",
+          title: "Statistics Fundamentals",
+          category: "Statistics",
+          price: 29.99,
+          featured: true,
+          sales: 15,
+          pdfUrl: "/pdfs/stats-fundamentals.pdf"
+        },
+        {
+          id: "2",
+          title: "Calculus Complete Guide",
+          category: "Mathematics",
+          price: 39.99,
+          featured: true,
+          sales: 8,
+          pdfUrl: "/pdfs/calculus-guide.pdf"
+        },
+        {
+          id: "3",
+          title: "Linear Algebra Basics",
+          category: "Mathematics",
+          price: 24.99,
+          featured: false,
+          sales: 12,
+          pdfUrl: "/pdfs/linear-algebra.pdf"
+        },
+      ]);
+
+      setUsers([
+        { id: "1", name: "John Doe", email: "john@example.com", purchases: 3, spent: 89.97 },
+        { id: "2", name: "Jane Smith", email: "jane@example.com", purchases: 2, spent: 64.98 },
+      ]);
+
+      setPurchases([
+        { 
+          id: "1", 
+          user: "John Doe", 
+          resource: "Statistics Fundamentals", 
+          amount: 29.99, 
+          date: new Date().toISOString() 
+        },
+        { 
+          id: "2", 
+          user: "Jane Smith", 
+          resource: "Calculus Complete Guide", 
+          amount: 39.99, 
+          date: new Date().toISOString() 
+        },
+      ]);
+
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+      router.push("/admin/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  const handleDeleteResource = async (resourceId: string) => {
+    if (!confirm("Are you sure you want to delete this resource?")) return;
+
+    try {
+      toast.success("Resource deleted successfully");
+      setResources(resources.filter(r => r.id !== resourceId));
+    } catch (error) {
+      toast.error("Error deleting resource");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-gray-900">StatManDavies Admin</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button className="text-gray-500 hover:text-gray-700">
+                <Settings className="h-5 w-5" />
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tabs */}
+        <div className="flex space-x-1 mb-8 border-b">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === "overview"
+                ? "text-indigo-600 border-b-2 border-indigo-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("resources")}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === "resources"
+                ? "text-indigo-600 border-b-2 border-indigo-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Resources
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === "users"
+                ? "text-indigo-600 border-b-2 border-indigo-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Users
+          </button>
+          <button
+            onClick={() => setActiveTab("purchases")}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === "purchases"
+                ? "text-indigo-600 border-b-2 border-indigo-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Purchases
+          </button>
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === "overview" && (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <FileText className="h-10 w-10 text-indigo-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Resources</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.totalResources}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <Users className="h-10 w-10 text-green-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Users</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <ShoppingBag className="h-10 w-10 text-purple-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Sales</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.totalSales}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <TrendingUp className="h-10 w-10 text-yellow-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Revenue</p>
+                    <p className="text-2xl font-semibold text-gray-900">£{stats.revenue.toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4">Recent Purchases</h2>
+              <div className="space-y-4">
+                {purchases.slice(0, 5).map((purchase) => (
+                  <div key={purchase.id} className="flex items-center justify-between py-2 border-b">
+                    <div>
+                      <p className="font-medium">{purchase.user}</p>
+                      <p className="text-sm text-gray-500">Purchased {purchase.resource}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">£{purchase.amount.toFixed(2)}</p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(purchase.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Resources Tab */}
+        {activeTab === "resources" && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">Resources</h2>
+              <Link
+                href="/admin/resources/new"
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add Resource
+              </Link>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sales
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Featured
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {resources.map((resource: any) => (
+                    <tr key={resource.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{resource.title}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
+                          {resource.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        £{resource.price.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {resource.sales}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          resource.featured 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-gray-100 text-gray-800"
+                        }`}>
+                          {resource.featured ? "Yes" : "No"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button className="text-blue-600 hover:text-blue-900">
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <Link
+                            href={`/admin/resources/${resource.id}/edit`}
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteResource(resource.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === "users" && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Users</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Purchases
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Spent
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {users.map((user: any) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.purchases}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        £{user.spent.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Purchases Tab */}
+        {activeTab === "purchases" && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Recent Purchases</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Resource
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {purchases.map((purchase: any) => (
+                    <tr key={purchase.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{purchase.user}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {purchase.resource}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        £{purchase.amount.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(purchase.date).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

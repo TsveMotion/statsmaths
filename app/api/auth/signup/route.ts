@@ -41,8 +41,17 @@ export async function POST(req: Request) {
       { message: "User created successfully", userId: user.id },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Signup error:", error);
+    
+    // Handle MongoDB connection issues
+    if (error.code === 'P2010' || error.message?.includes('timeout')) {
+      return NextResponse.json(
+        { error: "Database connection error. Please ensure your IP is whitelisted in MongoDB Atlas or try again later." },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

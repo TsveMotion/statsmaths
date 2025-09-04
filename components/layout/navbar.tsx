@@ -17,22 +17,35 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-indigo-600">
+            <Link
+              href="/"
+              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >
               Home
             </Link>
-            {session && (
-              <Link href="/dashboard" className="text-gray-700 hover:text-indigo-600">
-                Dashboard
-              </Link>
-            )}
-            <Link href="/resources" className="text-gray-700 hover:text-indigo-600">
+            <Link
+              href="/resources"
+              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >
               Resources
             </Link>
-            <Link href="/about" className="text-gray-700 hover:text-indigo-600">
+            <Link
+              href="/about"
+              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >
               About
             </Link>
-            <Link href="/contact" className="text-gray-700 hover:text-indigo-600">
+            <Link
+              href="/contact"
+              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >
               Contact
+            </Link>
+            <Link
+              href="/admin/login"
+              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >
+              Admin
             </Link>
           </nav>
 

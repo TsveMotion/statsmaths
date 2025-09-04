@@ -54,7 +54,15 @@ export default function SignUpPage() {
         }
       } else {
         const data = await response.json();
-        toast.error(data.error || "Failed to create account");
+
+        if (!response.ok) {
+          if (response.status === 503) {
+            toast.error("Database connection issue. Please check MongoDB Atlas IP whitelist settings.");
+          } else {
+            toast.error(data.error || "Something went wrong");
+          }
+          return;
+        }
       }
     } catch (error) {
       toast.error("Something went wrong");
