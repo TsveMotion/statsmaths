@@ -7,7 +7,7 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "StatsMaths - Master Statistics & Maths Revision",
+  title: "StatManDavies - Master Statistics & Maths Revision",
   description: "Premium revision resources for Maths and Statistics students",
 };
 

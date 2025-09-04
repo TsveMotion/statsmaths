@@ -50,7 +50,7 @@ export default function SignInPage() {
         <div className="text-center">
           <Link href="/" className="inline-flex items-center space-x-2 mb-6">
             <BookOpen className="h-10 w-10 text-indigo-600" />
-            <span className="text-2xl font-bold text-gray-900">StatsMaths</span>
+            <span className="text-2xl font-bold text-gray-900">StatManDavies</span>
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900">
             Sign in to your account

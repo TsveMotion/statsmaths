@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <BookOpen className="h-8 w-8 text-indigo-400" />
-              <span className="font-bold text-xl">StatsMaths</span>
+              <span className="font-bold text-xl">StatManDavies</span>
             </div>
             <p className="text-gray-400">
               Master Statistics & Maths with premium revision resources.
@@ -77,8 +77,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:support@statsmaths.com" className="text-gray-400 hover:text-white">
-                  support@statsmaths.com
+                <a href="mailto:support@statmandavies.com" className="text-gray-400 hover:text-white">
+                  support@statmandavies.com
                 </a>
               </li>
             </ul>
@@ -86,7 +86,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} StatsMaths. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} StatManDavies. All rights reserved.</p>
         </div>
       </div>
     </footer>

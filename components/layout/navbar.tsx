@@ -13,10 +13,18 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
             <BookOpen className="h-8 w-8 text-indigo-600" />
-            <span className="font-bold text-xl text-gray-900">StatsMaths</span>
+            <span className="font-bold text-xl text-gray-900">StatManDavies</span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="/" className="text-gray-700 hover:text-indigo-600">
+              Home
+            </Link>
+            {session && (
+              <Link href="/dashboard" className="text-gray-700 hover:text-indigo-600">
+                Dashboard
+              </Link>
+            )}
             <Link href="/resources" className="text-gray-700 hover:text-indigo-600">
               Resources
             </Link>
@@ -26,32 +34,22 @@ export function Navbar() {
             <Link href="/contact" className="text-gray-700 hover:text-indigo-600">
               Contact
             </Link>
-          </div>
+          </nav>
 
           <div className="flex items-center space-x-4">
             {session ? (
               <>
-                {session.user.role === "ADMIN" && (
-                  <Link
-                    href="/admin"
-                    className="text-gray-700 hover:text-indigo-600"
-                  >
-                    Admin
-                  </Link>
-                )}
                 <Link
                   href="/dashboard"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600"
+                  className="text-sm text-gray-700 hover:text-indigo-600"
                 >
-                  <User className="h-5 w-5" />
-                  <span>Dashboard</span>
+                  {session.user?.name || session.user?.email}
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span>Sign Out</span>
+                  Sign Out
                 </button>
               </>
             ) : (

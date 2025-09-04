@@ -22,8 +22,6 @@ const nextConfig = {
     // Skip type checking during production builds to avoid failing the build on TS errors
     ignoreBuildErrors: true,
   },
-  // Ensure SWC minification is enabled for optimized production bundles (enabled by default)
-  swcMinify: true,
 };
 
 export default nextConfig;
