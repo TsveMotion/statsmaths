@@ -41,12 +41,21 @@ export function Navbar() {
             >
               Contact
             </Link>
-            <Link
-              href="/admin/login"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >
-              Admin
-            </Link>
+            {session?.user?.role === "ADMIN" ? (
+              <Link
+                href="/admin"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+              >
+                Admin
+              </Link>
+            ) : (
+              <Link
+                href="/admin/login"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">

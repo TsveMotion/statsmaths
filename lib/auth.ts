@@ -15,10 +15,14 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/error",
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -30,6 +34,24 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // Admin bypass via environment variables (does not require DB)
+        const adminEmail = process.env.ADMIN_USERNAME;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (
+          adminEmail &&
+          adminPassword &&
+          credentials.email.toLowerCase() === adminEmail.toLowerCase() &&
+          credentials.password === adminPassword
+        ) {
+          return {
+            id: "admin",
+            email: adminEmail,
+            name: "Admin",
+            role: "ADMIN" as any,
+          };
+        }
+
+        // Fallback to database user lookup
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
