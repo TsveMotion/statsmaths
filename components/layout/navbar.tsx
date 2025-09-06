@@ -41,16 +41,9 @@ export function Navbar() {
             >
               Contact
             </Link>
-            {session?.user?.role === "ADMIN" ? (
+            {session?.user?.role === "ADMIN" && (
               <Link
-                href="/admin"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-              >
-                Admin
-              </Link>
-            ) : (
-              <Link
-                href="/admin/login"
+                href="/admin/dashboard"
                 className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
               >
                 Admin

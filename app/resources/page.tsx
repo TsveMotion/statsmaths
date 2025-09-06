@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
 import { Search, Filter, ShoppingCart, Eye } from "lucide-react";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 interface Resource {
   id: string;
@@ -62,12 +64,14 @@ export default function ResourcesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">All Resources</h1>
-          <p className="text-xl text-gray-600">Browse our complete collection of revision materials</p>
-        </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-black mb-4">All Resources</h1>
+            <p className="text-xl text-black">Browse our complete collection of revision materials</p>
+          </div>
 
         {/* Search and Filter */}
         <div className="bg-white rounded-lg shadow p-4 mb-8">
@@ -108,7 +112,7 @@ export default function ResourcesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredResources.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <p className="text-gray-500">No resources found matching your criteria.</p>
+                <p className="text-black">No resources found matching your criteria.</p>
               </div>
             ) : (
               filteredResources.map((resource) => (
@@ -139,16 +143,14 @@ export default function ResourcesPage() {
                     
                     <div className="flex gap-3">
                       <Link
-                        href={`/resources/${resource.id}`}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
+                        href={`/resources/${resource.id}/preview`}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 transition-colors">
                         <Eye className="h-4 w-4 mr-2" />
                         Preview
                       </Link>
                       <Link
-                        href={`/checkout/${resource.id}`}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                      >
+                        href={`/resources/${resource.id}/purchase`}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         Buy Now
                       </Link>
@@ -161,5 +163,7 @@ export default function ResourcesPage() {
         )}
       </div>
     </div>
+    <Footer />
+  </>
   );
 }

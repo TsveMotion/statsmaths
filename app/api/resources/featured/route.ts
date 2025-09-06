@@ -1,6 +1,46 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Fallback data for when database is unavailable
+const fallbackResources = [
+  {
+    id: "1",
+    title: "Statistics Fundamentals",
+    description: "Master the core concepts of statistics with this comprehensive guide.",
+    category: "Statistics",
+    price: 29.99,
+    featured: true,
+    imageUrl: "/images/stats-preview.jpg",
+    pdfUrl: "/pdfs/stats-fundamentals.pdf",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    title: "Calculus Complete Guide",
+    description: "Everything you need to know about calculus in one comprehensive resource.",
+    category: "Mathematics",
+    price: 39.99,
+    featured: true,
+    imageUrl: "/images/calculus-preview.jpg",
+    pdfUrl: "/pdfs/calculus-guide.pdf",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "3",
+    title: "Linear Algebra Basics",
+    description: "Learn the fundamentals of linear algebra with practical examples.",
+    category: "Mathematics",
+    price: 24.99,
+    featured: true,
+    imageUrl: "/images/linear-algebra-preview.jpg",
+    pdfUrl: "/pdfs/linear-algebra.pdf",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 export async function GET() {
   try {
     const featuredResources = await prisma.resource.findMany({
@@ -10,18 +50,9 @@ export async function GET() {
     });
 
     return NextResponse.json(featuredResources);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching featured resources:", error);
-    
-    // Return empty array when database is unavailable
-    // This allows the app to work with mock data
-    if (error.code === 'P2010' || error.message?.includes('timeout')) {
-      return NextResponse.json([]);
-    }
-    
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    // Return fallback data when database is unavailable
+    return NextResponse.json(fallbackResources);
   }
 }

@@ -36,27 +36,41 @@ interface Purchase {
 interface DashboardStats {
   totalPurchases: number;
   totalSpent: number;
-  recentPurchases: Purchase[];
-  recommendedResources: any[];
+  studyStreak: number;
+  achievement: string;
+}
+
+interface RecentActivity {
+  type: string;
+  title: string;
+  date: string;
 }
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [userResources, setUserResources] = useState<Purchase[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalPurchases: 0,
     totalSpent: 0,
-    recentPurchases: [],
-    recommendedResources: []
+    studyStreak: 0,
+    achievement: "Newcomer"
   });
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === "loading") return;
+    if (!session) {
       router.push("/auth/signin");
+    } else if (session.user?.role === "ADMIN") {
+      // Redirect admin users to admin dashboard
+      router.push("/admin/dashboard");
+    } else {
+      fetchUserData();
     }
-  }, [status, router]);
+  }, [session, status, router]);
 
   useEffect(() => {
     if (session) {
@@ -66,37 +80,50 @@ export default function DashboardPage() {
 
   const fetchUserData = async () => {
     try {
-      // Fetch user purchases
-      const purchasesRes = await fetch("/api/user/purchases");
-      if (purchasesRes.ok) {
-        const purchasesData = await purchasesRes.json();
-        setPurchases(purchasesData);
+      // Fetch real user data from API
+      const response = await fetch("/api/user/purchases");
+      if (response.ok) {
+        const purchases = await response.json();
+        setUserResources(purchases);
         
-        // Calculate stats
-        const totalSpent = purchasesData.reduce((sum: number, p: Purchase) => 
-          sum + p.resource.price, 0
-        );
-        
+        // Calculate stats from real data
+        const totalSpent = purchases.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
         setStats({
-          totalPurchases: purchasesData.length,
-          totalSpent: totalSpent,
-          recentPurchases: purchasesData.slice(0, 3),
-          recommendedResources: []
+          totalPurchases: purchases.length,
+          totalSpent,
+          studyStreak: 7, // This would come from user activity tracking
+          achievement: purchases.length > 5 ? "Power Learner" : purchases.length > 0 ? "Rising Star" : "Newcomer"
         });
-      }
-
-      // Fetch recommended resources
-      const recommendedRes = await fetch("/api/resources/recommended");
-      if (recommendedRes.ok) {
-        const recommendedData = await recommendedRes.json();
-        setStats(prev => ({
-          ...prev,
-          recommendedResources: recommendedData
+        
+        // Set recent activity from purchases
+        const activities = purchases.slice(0, 3).map((p: any) => ({
+          type: "purchase",
+          title: p.resource?.title || "Resource",
+          date: new Date(p.createdAt).toLocaleDateString()
         }));
+        setRecentActivity(activities);
+      } else {
+        // If no purchases, set empty state
+        setUserResources([]);
+        setStats({
+          totalPurchases: 0,
+          totalSpent: 0,
+          studyStreak: 0,
+          achievement: "Newcomer"
+        });
+        setRecentActivity([]);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      toast.error("Failed to load dashboard data");
+      // Set empty state on error
+      setUserResources([]);
+      setStats({
+        totalPurchases: 0,
+        totalSpent: 0,
+        studyStreak: 0,
+        achievement: "Newcomer"
+      });
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }
@@ -137,33 +164,26 @@ export default function DashboardPage() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Welcome back, {session?.user?.name || "Student"}!
-                </h1>
-                <p className="mt-2 text-gray-600">
-                  Track your progress and access your revision materials
-                </p>
-              </div>
-              <div className="hidden md:block">
-                <div className="flex items-center space-x-2">
-                  <User className="h-12 w-12 text-gray-400" />
-                </div>
-              </div>
-            </div>
+        {/* Welcome Header */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back, {session?.user?.name || session?.user?.email?.split('@')[0]}!
+            </h1>
+            <p className="text-indigo-100">
+              Track your progress and access your revision materials
+            </p>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Resources</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalPurchases}</p>
+                  <p className="text-sm font-medium text-black">Total Resources</p>
+                  <p className="text-2xl font-semibold text-black">{stats.totalPurchases}</p>
                 </div>
                 <Package className="h-8 w-8 text-indigo-600" />
               </div>
@@ -172,8 +192,8 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Invested</p>
-                  <p className="text-2xl font-bold text-gray-900">£{stats.totalSpent.toFixed(2)}</p>
+                  <p className="text-sm text-black">Total Invested</p>
+                  <p className="text-2xl font-bold text-black">£{stats.totalSpent.toFixed(2)}</p>
                 </div>
                 <CreditCard className="h-8 w-8 text-green-600" />
               </div>
@@ -182,8 +202,8 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Study Streak</p>
-                  <p className="text-2xl font-bold text-gray-900">7 days</p>
+                  <p className="text-sm text-black">Study Streak</p>
+                  <p className="text-2xl font-bold text-black">7 days</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-600" />
               </div>
@@ -192,8 +212,8 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Achievement</p>
-                  <p className="text-2xl font-bold text-gray-900">Rising Star</p>
+                  <p className="text-sm text-black">Achievement</p>
+                  <p className="text-2xl font-bold text-black">Rising Star</p>
                 </div>
                 <Award className="h-8 w-8 text-yellow-600" />
               </div>
@@ -205,15 +225,15 @@ export default function DashboardPage() {
             {/* My Resources Section */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <h2 className="text-xl font-bold text-black mb-6 flex items-center">
                   <BookOpen className="h-5 w-5 mr-2 text-indigo-600" />
                   My Resources
                 </h2>
                 
-                {purchases.length === 0 ? (
+                {userResources.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-4">No resources yet</p>
+                    <p className="text-black mb-4">No resources yet</p>
                     <button
                       onClick={() => router.push("/resources")}
                       className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
@@ -223,30 +243,23 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {purchases.map((purchase) => (
-                      <div key={purchase.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                    {userResources.map((purchase: Purchase) => (
+                      <div key={purchase.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900">{purchase.resource.title}</h3>
-                            <p className="text-sm text-gray-600 mt-1">{purchase.resource.description}</p>
-                            <div className="flex items-center mt-2 space-x-4">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                {purchase.resource.category}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                Purchased {new Date(purchase.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
+                          <div>
+                            <h3 className="font-semibold text-black">{purchase.resource.title}</h3>
+                            <p className="text-sm text-black">{purchase.resource.category}</p>
+                            <p className="text-xs text-black mt-2">
+                              Purchased: {new Date(purchase.createdAt).toLocaleDateString()}
+                            </p>
                           </div>
-                          {purchase.resource.fileUrl && (
-                            <button
-                              onClick={() => handleDownload(purchase.resource.id, purchase.resource.title)}
-                              className="ml-4 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Download
-                            </button>
-                          )}
+                          <button 
+                            onClick={() => handleDownload(purchase.resource.id, purchase.resource.title)}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -259,26 +272,23 @@ export default function DashboardPage() {
             <div className="space-y-6">
               {/* Recent Activity */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <h2 className="text-lg font-bold text-black mb-4 flex items-center">
                   <Clock className="h-5 w-5 mr-2 text-purple-600" />
                   Recent Activity
                 </h2>
-                {stats.recentPurchases.length === 0 ? (
-                  <p className="text-gray-600 text-sm">No recent activity</p>
-                ) : (
-                  <div className="space-y-3">
-                    {stats.recentPurchases.map((purchase) => (
-                      <div key={purchase.id} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="h-2 w-2 bg-green-400 rounded-full mt-1.5"></div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 truncate">
-                            {purchase.resource.title}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(purchase.createdAt).toLocaleDateString()}
-                          </p>
+                {recentActivity.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4 text-black">Recent Activity</h3>
+                    {recentActivity.map((activity, index) => (
+                      <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium text-black">{activity.title}</h4>
+                            <p className="text-sm text-black capitalize">{activity.type}</p>
+                            <p className="text-xs text-black mt-1">
+                              {activity.date}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -288,36 +298,29 @@ export default function DashboardPage() {
 
               {/* Recommended Resources */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <h2 className="text-lg font-bold text-black mb-4 flex items-center">
                   <ShoppingCart className="h-5 w-5 mr-2 text-indigo-600" />
                   Recommended for You
                 </h2>
-                {stats.recommendedResources.length === 0 ? (
-                  <p className="text-gray-600 text-sm">No recommendations available</p>
-                ) : (
-                  <div className="space-y-3">
-                    {stats.recommendedResources.slice(0, 3).map((resource: any) => (
-                      <div key={resource.id} className="border-b pb-3 last:border-0">
-                        <h4 className="font-medium text-sm text-gray-900">{resource.title}</h4>
-                        <p className="text-xs text-gray-600 mt-1">{resource.description}</p>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold text-gray-900">£{resource.price}</span>
-                          <button
-                            onClick={() => router.push(`/resources/${resource.id}`)}
-                            className="text-xs text-indigo-600 hover:text-indigo-700"
-                          >
-                            View →
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                <div className="space-y-3">
+                  <div className="border-b pb-3">
+                    <h4 className="font-medium text-sm text-black">Linear Algebra Basics</h4>
+                    <p className="text-xs text-black mt-1">Essential concepts explained simply</p>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-sm font-bold text-black">£24.99</span>
+                      <button
+                        onClick={() => router.push(`/resources/3`)}
+                        className="text-xs text-indigo-600 hover:text-indigo-700">
+                        View →
+                      </button>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Quick Actions */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+                <h2 className="text-lg font-bold text-black mb-4">Quick Actions</h2>
                 <div className="space-y-2">
                   <button
                     onClick={() => router.push("/resources")}
